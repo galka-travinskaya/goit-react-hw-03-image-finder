@@ -25,30 +25,38 @@ export default class ImageGallery extends Component {
 
     if (prevName !== nextName) {
       this.setState({ status: 'pending' });
+      // console.log('nextName', nextName);
 
       imagesApi
-        .fetchImg(nextName)
-        .then(images => {
-          if (images.totalHits === 0) {
+        // .fetchImg(nextName)
+        .getImg(nextName)
+        .then(({hits, totalHits}) => {
+          // console.log('hits', hits);
+          // console.log('totalHits', totalHits);
+          if (totalHits === 0) { 
             return Promise.reject(
               new Error(`По поиску ${nextName} ничего не найдено`),
             );
           }
           window.scrollTo({ top: 0 });
           return this.setState({
-            images: [...images.hits],
-            page: 1,
+            images: [...hits],
+            // page: 1,
             status: 'resolved',
           });
         })
-        .catch(error => this.setState({ error, status: 'rejected' }));
+        .catch(error => this.setState({ error, 
+          images: [], 
+          page: 1,
+          status: 'rejected' }));
     }
 
     if (prevPage !== nextPage && nextPage !== 1) {
       this.setState({ status: 'pending' });
 
       imagesApi
-        .fetchImg(nextName, nextPage)
+        // .fetchImg(nextName, nextPage)
+        .getImg(nextName, nextPage)
         .then(images => {
           return this.setState(prevState => ({
             images: [...prevState.images, ...images.hits],
@@ -99,7 +107,7 @@ export default class ImageGallery extends Component {
               />
             ))}
         </ul>
-        {status === 'rejected' && <h1>{error.message}</h1>}
+        {status === 'rejected' && <h1 style={{color: 'red'}}>{error.message}</h1>}
         {status === 'pending' && <Loader type="TailSpin" color="#00BFFF" />}
         {(images.length > 0 || status === 'resolved') && (
           <Button onLoadMore={this.loadMore} />
